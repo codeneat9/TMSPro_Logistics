@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMS Delay Prediction & Route Planning Dashboard</title>
+    
+    <!-- Leaflet Map Library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 1400px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2 i {
+            color: #667eea;
+        }
+
+        /* Trip Input Form */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+            font-size: 12px;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        /* Map Container */
+        #map {
+            height: 500px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        /* Results Section */
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 1000px) {
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .result-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .result-box h3 {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .result-box .value {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .result-box .label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        /* Alert Box */
+        .alert-box {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-left: 4px solid;
+        }
+
+        .alert-critical {
+            background: #fff3cd;
+            border-color: #ff6b6b;
+            color: #856404;
+        }
+
+        .alert-high {
+            background: #fff3cd;
+            border-color: #ffa500;
+            color: #856404;
+        }
+
+        .alert-medium {
+            background: #cfe2ff;
+            border-color: #0d6efd;
+            color: #084298;
+        }
+
+        .alert-low {
+            background: #d1e7dd;
+            border-color: #198754;
+            color: #0a3622;
+        }
+
+        .alert-box i {
+            font-size: 24px;
+        }
+
+        /* Routes Display */
+        .routes-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .route-item {
+            background: #f8f9fa;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .route-item:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .route-item.active {
+            background: #d1ecf1;
+            border-left-color: #0c5460;
+        }
+
+        .route-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .route-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .stat {
+            background: white;
+            padding: 6px;
+            border-radius: 3px;
+            text-align: center;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 10px;
+        }
+
+        .stat-value {
+            color: #333;
+            font-weight: 600;
+        }
+
+        /* Decision Card */
+        .decision-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .decision-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .decision-reason {
+            font-size: 14px;
+            opacity: 0.95;
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .decision-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            margin-right: 5px;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            font-size: 12px;
+        }
+
+        .info-text {
+            color: #666;
+            font-size: 12px;
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚗 TMS Delay Prediction & Route Planning Dashboard</h1>
+            <p>Real-time delay prediction with intelligent route recommendations</p>
+        </header>
+
+        <div class="dashboard">
+            <!-- Left Panel: Input & Results -->
+            <div>
+                <div class="card">
+                    <h2><i class="fas fa-map-marker"></i> Trip Details</h2>
+                    
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Trip ID</label>
+                            <input type="text" id="tripId" placeholder="TRIP-001" value="TRIP-001">
+                        </div>
+                        <div class="form-group">
+                            <label>Driver ID</label>
+                            <input type="text" id="driverId" placeholder="DRV-001" value="DRV-001">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Pickup Latitude</label>
+                            <input type="number" id="pickupLat" placeholder="41.141412" value="41.141412" step="0.0001">
+                        </div>
+                        <div class="form-group">
+                            <label>Pickup Longitude</label>
+                            <input type="number" id="pickupLon" placeholder="-8.618643" value="-8.618643" step="0.0001">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Destination Latitude</label>
+                            <input type="number" id="destLat" placeholder="41.160000" value="41.160000" step="0.0001">
+                        </div>
+                        <div class="form-group">
+                            <label>Destination Longitude</label>
+                            <input type="number" id="destLon" placeholder="-8.640000" value="-8.640000" step="0.0001">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Temperature (°C)</label>
+                            <input type="number" id="temperature" placeholder="22.0" value="22.0" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>Precipitation (mm)</label>
+                            <input type="number" id="precipitation" placeholder="0.0" value="0.0" step="0.1">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Wind Speed (m/s)</label>
+                            <input type="number" id="windspeed" placeholder="3.5" value="3.5" step="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label>Taxi ID</label>
+                            <input type="number" id="taxiId" placeholder="20000589" value="20000589">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Call Type</label>
+                            <select id="callType">
+                                <option value="A">A - Taxi Stand</option>
+                                <option value="B" selected>B - Phone Call</option>
+                                <option value="C">C - Mobile App</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Day Type</label>
+                            <select id="dayType">
+                                <option value="A" selected>A - Weekday</option>
+                                <option value="B">B - Weekend</option>
+                                <option value="C">C - Holiday</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Strategy</label>
+                            <select id="strategy">
+                                <option value="balanced" selected>Balanced (Time + Safety)</option>
+                                <option value="fastest">Fastest Route</option>
+                                <option value="safest">Safest Route</option>
+                                <option value="avoid_traffic">Avoid Traffic</option>
+                                <option value="minimize_distance">Shortest Distance</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <button class="btn-primary" onclick="planTrip()"><i class="fas fa-route"></i> Plan Trip</button>
+                        <button class="btn-secondary" onclick="loadSampleData()">📋 Load Sample</button>
+                    </div>
+
+                    <div class="info-text">
+                        💡 This dashboard predicts taxi delays and recommends optimal routes using our LightGBM ML model trained on 1.6M trips.
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div id="resultsSection" style="display:none; margin-top: 20px;">
+                    <div class="results-grid">
+                        <div class="result-box">
+                            <h3>Delay Probability</h3>
+                            <div class="value" id="delayProb">0%</div>
+                            <div class="label" id="delayLabel">Low Risk</div>
+                        </div>
+                        <div class="result-box">
+                            <h3>Primary Route Time</h3>
+                            <div class="value" id="routeTime">0 min</div>
+                            <div class="label" id="routeTimeLabel">distance</div>
+                        </div>
+                        <div class="result-box">
+                            <h3>Risk Score</h3>
+                            <div class="value" id="riskScore">0.00</div>
+                            <div class="label">0.0 = Safe, 1.0 = High Risk</div>
+                        </div>
+                    </div>
+
+                    <!-- Agent Alert -->
+                    <div id="agentAlert"></div>
+
+                    <!-- Routes List -->
+                    <div class="card">
+                        <h2><i class="fas fa-road"></i> Available Routes</h2>
+                        <div class="routes-container" id="routesList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Map & Decision -->
+            <div>
+                <div class="card" style="height: 100%; display: flex; flex-direction: column;">
+                    <h2><i class="fas fa-map"></i> Route Visualization</h2>
+                    <div id="map" style="flex: 1; margin-bottom: 15px;"></div>
+                    
+                    <!-- Agent Decision -->
+                    <div id="decisionSection" style="display:none;">
+                        <div class="decision-card">
+                            <div class="decision-title" id="decisionTitle">Agent Decision</div>
+                            <div class="decision-reason" id="decisionReason">Analyzing...</div>
+                            <div class="decision-meta">
+                                <span><strong>Confidence:</strong> <span id="decisionConfidence">-</span>%</span>
+                                <span><strong>Urgency:</strong> <span id="decisionUrgency" class="badge">-</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>Embedded AI for Transportation Management Systems | LightGBM Delay Predictor + OSMnx Route Planning</p>
+        </footer>
+    </div>
+
+    <script>
+        let map;
+        let routeLayers = [];
+        let currentTrip = null;
+
+        // Initialize map
+        function initMap() {
+            map = L.map('map').setView([41.15, -8.63], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+        }
+
+        function loadSampleData() {
+            document.getElementById('tripId').value = 'TRIP-' + Math.floor(Math.random() * 10000);
+            document.getElementById('driverId').value = 'DRV-' + Math.floor(Math.random() * 1000);
+            document.getElementById('temperature').value = '22.0';
+            document.getElementById('precipitation').value = Math.random() > 0.7 ? (Math.random() * 5).toFixed(1) : '0.5';
+            document.getElementById('windspeed').value = '3.5';
+        }
+
+        async function planTrip() {
+            const formBtn = event.target;
+            formBtn.disabled = true;
+            formBtn.innerHTML = '<span class="spinner" style="width: 20px; height: 20px; border: 2px solid white; border-top-color: transparent;"></span> Planning...';
+
+            try {
+                const payload = {
+                    trip_id: document.getElementById('tripId').value,
+                    driver_id: document.getElementById('driverId').value,
+                    pickup_lat: parseFloat(document.getElementById('pickupLat').value),
+                    pickup_lon: parseFloat(document.getElementById('pickupLon').value),
+                    destination_lat: parseFloat(document.getElementById('destLat').value),
+                    destination_lon: parseFloat(document.getElementById('destLon').value),
+                    pickup_timestamp: Math.floor(Date.now() / 1000),
+                    taxi_id: parseInt(document.getElementById('taxiId').value),
+                    call_type: document.getElementById('callType').value,
+                    day_type: document.getElementById('dayType').value,
+                    temperature_2m: parseFloat(document.getElementById('temperature').value),
+                    precipitation: parseFloat(document.getElementById('precipitation').value),
+                    windspeed_10m: parseFloat(document.getElementById('windspeed').value),
+                    strategy: document.getElementById('strategy').value
+                };
+
+                const response = await fetch('/dashboard/plan-trip', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const trip = await response.json();
+                currentTrip = trip;
+                displayResults(trip);
+
+            } catch (error) {
+                alert('❌ Error: ' + error.message);
+            } finally {
+                formBtn.disabled = false;
+                formBtn.innerHTML = '<i class="fas fa-route"></i> Plan Trip';
+            }
+        }
+
+        function displayResults(trip) {
+            // Show results section
+            document.getElementById('resultsSection').style.display = 'block';
+            document.getElementById('decisionSection').style.display = 'block';
+
+            // Update result boxes
+            const delayProb = (trip.predicted_delay.probability * 100).toFixed(1);
+            document.getElementById('delayProb').textContent = delayProb + '%';
+            document.getElementById('delayLabel').textContent = trip.predicted_delay.is_delayed ? '⚠️ Likely Delayed' : '✓ On-Time';
+            document.getElementById('delayLabel').style.color = trip.predicted_delay.is_delayed ? '#ff6b6b' : '#51cf66';
+
+            document.getElementById('routeTime').textContent = trip.primary_route.estimated_time_min.toFixed(0) + ' min';
+            document.getElementById('routeTimeLabel').textContent = trip.primary_route.distance_km.toFixed(1) + ' km';
+
+            document.getElementById('riskScore').textContent = trip.primary_route.risk_score.toFixed(3);
+
+            // Agent Alert
+            const alertBox = document.getElementById('agentAlert');
+            if (trip.driver_alert) {
+                const urgency = trip.reroute_recommendation.urgency_level;
+                const alertClass = {
+                    'critical': 'alert-critical',
+                    'high': 'alert-high',
+                    'medium': 'alert-medium',
+                    'low': 'alert-low'
+                }[urgency] || 'alert-low';
+
+                const icons = {
+                    'critical': '⛔',
+                    'high': '🚨',
+                    'medium': '⚠️',
+                    'low': 'ℹ️'
+                };
+
+                alertBox.innerHTML = `<div class="alert-box ${alertClass}">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <div>${trip.driver_alert}</div>
+                </div>`;
+            }
+
+            // Routes List
+            const routesList = document.getElementById('routesList');
+            routesList.innerHTML = '';
+            
+            const routes = [trip.primary_route, ...trip.alternate_routes];
+            routes.forEach((route, idx) => {
+                const isRecommended = idx === (trip.reroute_recommendation.recommended_route_index || 0);
+                const routeHTML = `
+                    <div class="route-item ${isRecommended ? 'active' : ''}" onclick="selectRoute(${idx})">
+                        <div class="route-name">
+                            ${route.route_name}
+                            ${isRecommended ? '<span class="badge">⭐ RECOMMENDED</span>' : ''}
+                        </div>
+                        <div class="route-stats">
+                            <div class="stat">
+                                <div class="stat-label">Distance</div>
+                                <div class="stat-value">${route.distance_km.toFixed(1)} km</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">Time</div>
+                                <div class="stat-value">${route.estimated_time_min.toFixed(0)} min</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-label">Risk</div>
+                                <div class="stat-value">${route.risk_score.toFixed(2)}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                routesList.innerHTML += routeHTML;
+            });
+
+            // Decision Card
+            document.getElementById('decisionTitle').textContent = 
+                trip.reroute_recommendation.should_reroute ? '🔄 REROUTE RECOMMENDED' : '✅ STICK TO ORIGINAL ROUTE';
+            document.getElementById('decisionReason').textContent = trip.reroute_recommendation.reasoning;
+            document.getElementById('decisionConfidence').textContent = (trip.reroute_recommendation.confidence * 100).toFixed(0);
+            document.getElementById('decisionUrgency').textContent = trip.reroute_recommendation.urgency_level.toUpperCase();
+
+            // Draw map
+            drawRoutesOnMap(routes, trip.pickup, trip.destination);
+        }
+
+        function selectRoute(index) {
+            const items = document.querySelectorAll('.route-item');
+            items.forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+        }
+
+        function drawRoutesOnMap(routes, pickup, destination) {
+            // Clear previous layers
+            routeLayers.forEach(layer => map.removeLayer(layer));
+            routeLayers = [];
+
+            const colors = ['#FF5733', '#3498DB', '#2ECC71'];
+
+            // Add markers
+            L.circleMarker([pickup.lat, pickup.lon], {
+                radius: 8,
+                fillColor: '#4CAF50',
+                color: '#2E7D32',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).bindPopup('<b>Pickup</b>').addTo(map).openPopup();
+
+            L.circleMarker([destination.lat, destination.lon], {
+                radius: 8,
+                fillColor: '#FF5733',
+                color: '#C62828',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.8
+            }).bindPopup('<b>Destination</b>').addTo(map);
+
+            // Draw route lines (simplified)
+            routes.forEach((route, idx) => {
+                if (route.coordinates && route.coordinates.length > 0) {
+                    const polyline = L.polyline(route.coordinates, {
+                        color: colors[idx % colors.length],
+                        weight: 3 + (idx === 0 ? 1 : 0),
+                        opacity: idx === 0 ? 1 : 0.6,
+                        dashArray: idx === 0 ? '' : '5, 5'
+                    }).bindPopup(route.route_name).addTo(map);
+                    routeLayers.push(polyline);
+                }
+            });
+
+            // Fit map to bounds
+            if (routes[0].coordinates && routes[0].coordinates.length > 0) {
+                const coords = routes[0].coordinates;
+                const bounds = L.latLngBounds(coords);
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            loadSampleData();
+        });
+    </script>
+</body>
+</html>

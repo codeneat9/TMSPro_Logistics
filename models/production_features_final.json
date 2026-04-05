@@ -1,0 +1,61 @@
+{
+  "trip_features": [
+    "total_distance",
+    "avg_speed",
+    "speed_std",
+    "num_stops",
+    "stop_ratio",
+    "start_lon",
+    "start_lat",
+    "end_lon",
+    "end_lat",
+    "geographic_spread"
+  ],
+  "temporal_features": [
+    "hour",
+    "day_of_week",
+    "month",
+    "is_weekend"
+  ],
+  "synthetic_features": [
+    "rain_probability",
+    "temp_extreme",
+    "traffic_congestion",
+    "incident_probability",
+    "road_type",
+    "route_popularity",
+    "special_event"
+  ],
+  "all_features": [
+    "total_distance",
+    "avg_speed",
+    "speed_std",
+    "num_stops",
+    "stop_ratio",
+    "start_lon",
+    "start_lat",
+    "end_lon",
+    "end_lat",
+    "geographic_spread",
+    "hour",
+    "day_of_week",
+    "month",
+    "is_weekend",
+    "rain_probability",
+    "temp_extreme",
+    "traffic_congestion",
+    "incident_probability",
+    "road_type",
+    "route_popularity",
+    "special_event"
+  ],
+  "synthetic_feature_descriptions": {
+    "rain_probability": "Weather proxy based on season",
+    "temp_extreme": "Temperature extremes (hot/cold months)",
+    "traffic_congestion": "Estimated from time patterns + route stats",
+    "incident_probability": "Accident likelihood (traffic + weather)",
+    "road_type": "Inferred from speed patterns (0=city, 1=main, 2=highway)",
+    "route_popularity": "Route frequency in dataset",
+    "special_event": "Weekend/Friday evening events proxy"
+  }
+}

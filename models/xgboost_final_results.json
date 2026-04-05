@@ -1,0 +1,36 @@
+{
+  "model": "XGBoost - Engineered Features",
+  "samples": 275405,
+  "features": {
+    "trip": 21,
+    "temporal": 10,
+    "total": 31
+  },
+  "metrics": {
+    "accuracy": 0.5396416187069951,
+    "precision": 0.298028657479237,
+    "recall": 0.39569827325053014,
+    "f1": 0.3399880267575939,
+    "roc_auc": 0.4991634794880728,
+    "fpr": 0.39877125673994196
+  },
+  "confusion_matrix": {
+    "TN": 23193,
+    "FP": 15383,
+    "FN": 9974,
+    "TP": 6531
+  },
+  "training_time_sec": 17.18072199821472,
+  "top_features": [
+    "geographic_spread",
+    "is_evening_rush",
+    "end_lat",
+    "start_lon",
+    "end_lon",
+    "start_lat",
+    "lon_range",
+    "estimated_duration",
+    "is_morning_rush",
+    "avg_distance_per_step"
+  ]
+}

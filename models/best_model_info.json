@@ -1,0 +1,66 @@
+{
+  "best_model": "1D CNN",
+  "metrics": {
+    "accuracy": 0.3977,
+    "precision": 0.299907517505615,
+    "recall": 0.758183032732131,
+    "f1": 0.42980213954369023,
+    "roc_auc": 0.5012038302506621,
+    "training_time": 120.01879620552063,
+    "predictions": null,
+    "probabilities": null
+  },
+  "selection_criteria": "F1 Score",
+  "all_models": {
+    "Logistic Regression": {
+      "accuracy": 0.4985,
+      "precision": 0.29348048232168406,
+      "recall": 0.47962591850367403,
+      "f1": 0.3641435273234436,
+      "roc_auc": 0.4908107203082538,
+      "training_time": 27.165281534194946,
+      "predictions": null,
+      "probabilities": null
+    },
+    "Random Forest": {
+      "accuracy": 0.6047,
+      "precision": 0.2951730029901751,
+      "recall": 0.23079492317969272,
+      "f1": 0.2590440487347704,
+      "roc_auc": 0.49561517172703,
+      "training_time": 27.518547296524048,
+      "predictions": null,
+      "probabilities": null
+    },
+    "Gradient Boosting": {
+      "accuracy": 0.7007,
+      "precision": 0.5555555555555556,
+      "recall": 0.0016700066800267202,
+      "f1": 0.00333000333000333,
+      "roc_auc": 0.49528472207522867,
+      "training_time": 92.65650463104248,
+      "predictions": null,
+      "probabilities": null
+    },
+    "1D CNN": {
+      "accuracy": 0.3977,
+      "precision": 0.299907517505615,
+      "recall": 0.758183032732131,
+      "f1": 0.42980213954369023,
+      "roc_auc": 0.5012038302506621,
+      "training_time": 120.01879620552063,
+      "predictions": null,
+      "probabilities": null
+    },
+    "LSTM": {
+      "accuracy": 0.4679,
+      "precision": 0.2945435281652834,
+      "recall": 0.5571142284569138,
+      "f1": 0.3853528936121058,
+      "roc_auc": 0.4881114641501101,
+      "training_time": 55.05083632469177,
+      "predictions": null,
+      "probabilities": null
+    }
+  }
+}

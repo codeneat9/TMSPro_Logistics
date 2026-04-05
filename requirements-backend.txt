@@ -1,0 +1,8 @@
+# Cloud Backend Dependencies
+# Install when building Flask/FastAPI backend
+
+flask>=3.0.0
+fastapi>=0.109.0
+uvicorn>=0.27.0
+sqlalchemy>=2.0.0
+pydantic>=2.5.0

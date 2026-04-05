@@ -1,0 +1,44 @@
+{
+  "model": "XGBoost Production - Real Kaggle Data + Synthetic Features",
+  "data_source": "Porto Taxi Trajectory Dataset (Kaggle)",
+  "real_features": "GPS trajectories, timestamps, delay labels",
+  "synthetic_features": "Traffic congestion, weather, incidents, road type",
+  "samples": 275405,
+  "features": {
+    "trip": 10,
+    "temporal": 4,
+    "synthetic": 7,
+    "total": 21
+  },
+  "metrics": {
+    "accuracy": 0.5569797207748588,
+    "precision": 0.2984945139066088,
+    "recall": 0.3543774613753408,
+    "f1": 0.3240443213296399,
+    "roc_auc": 0.5009414134399401,
+    "fpr": 0.3563355454168395
+  },
+  "confusion_matrix": {
+    "TN": 24830,
+    "FP": 13746,
+    "FN": 10656,
+    "TP": 5849
+  },
+  "training_time_sec": 20.412275552749634,
+  "top_features": [
+    "geographic_spread",
+    "incident_probability",
+    "end_lat",
+    "start_lon",
+    "end_lon",
+    "rain_probability",
+    "start_lat",
+    "total_distance",
+    "hour",
+    "special_event"
+  ],
+  "improvement_over_best_ml": {
+    "f1_improvement": -0.10575567867036012,
+    "auc_improvement": -0.00025858656005983693
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "TMS Logistics",
+    "slug": "tms-logistics-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0a1425"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "package": "com.embeddedtms.logistics",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "POST_NOTIFICATIONS"
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "com.embeddedtms.logistics",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "TMS uses your location to track vehicles and improve route decisions.",
+        "NSUserNotificationUsageDescription": "TMS sends delay and reroute alerts for active shipments."
+      }
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "TMS uses your location to track active shipment progress in real time."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#0a1425"
+        }
+      ]
+    ]
+  }
+}

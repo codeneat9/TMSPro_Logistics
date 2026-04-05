@@ -1,0 +1,9 @@
+# Geospatial and Routing Dependencies
+# Install these separately after core dependencies
+
+osmnx>=1.8.0
+networkx>=3.1
+folium>=0.15.0
+geopy>=2.4.0
+geopandas>=0.14.0
+shapely>=2.0.0

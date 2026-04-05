@@ -1,0 +1,35 @@
+{
+  "feature_columns": [
+    "expected_time",
+    "hour",
+    "weekday",
+    "is_rush_hour",
+    "is_weekend",
+    "is_morning",
+    "is_afternoon",
+    "is_evening",
+    "is_night",
+    "call_type_encoded",
+    "day_type_encoded"
+  ],
+  "best_model": "Random Forest",
+  "metrics": {
+    "model": "Random Forest",
+    "accuracy": 0.6681,
+    "precision": 0.4737649585762504,
+    "recall": 0.11781762685997711,
+    "f1_score": 0.1887069176240528,
+    "roc_auc": 0.5925750663605602,
+    "training_time": 7.144953727722168,
+    "confusion_matrix": [
+      [
+        25180,
+        1715
+      ],
+      [
+        11561,
+        1544
+      ]
+    ]
+  }
+}

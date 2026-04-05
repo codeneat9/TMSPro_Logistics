@@ -1,0 +1,11 @@
+{
+  "logistic_regression": {
+    "auc": 0.5106159927853168,
+    "model_path": "logistic_regression.pkl"
+  },
+  "random_forest": {
+    "auc": 0.500581826412727,
+    "model_path": "random_forest.pkl"
+  },
+  "best_model": "logistic_regression"
+}

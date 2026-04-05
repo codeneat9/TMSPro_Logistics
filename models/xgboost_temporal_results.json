@@ -1,0 +1,37 @@
+{
+  "model": "XGBoost with GPS + Temporal Features",
+  "samples": 300000,
+  "features": {
+    "gps": 60,
+    "temporal": 10,
+    "total": 70,
+    "temporal_list": [
+      "hour",
+      "day_of_week",
+      "month",
+      "is_weekend",
+      "is_rush_hour",
+      "is_morning_rush",
+      "is_evening_rush",
+      "is_late_night",
+      "is_business_hours",
+      "day_type"
+    ]
+  },
+  "metrics": {
+    "accuracy": 0.5291,
+    "precision": 0.29989954408469205,
+    "recall": 0.43372820742065266,
+    "f1": 0.3546073370185938,
+    "roc_auc": 0.5015128730082845,
+    "false_positive_rate": 0.43036291088732664
+  },
+  "confusion_matrix": {
+    "TN": 23984,
+    "FP": 18120,
+    "FN": 10134,
+    "TP": 7762
+  },
+  "training_time_seconds": 23.107704639434814,
+  "scale_pos_weight": 2.352798189488978
+}

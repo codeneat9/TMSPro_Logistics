@@ -1,0 +1,88 @@
+{
+  "model_type": "Intelligent Rule-Based Delay Predictor",
+  "version": "1.0",
+  "best_threshold": 0.3,
+  "metrics": {
+    "accuracy": 0.39738515053376516,
+    "precision": 0.2993297297297297,
+    "recall": 0.7573027971262901,
+    "f1_score": 0.429067316831274,
+    "roc_auc": 0.49957903209516813,
+    "false_positive_rate": 0.7561366393927138
+  },
+  "confusion_matrix": {
+    "TN": 15677,
+    "FP": 48609,
+    "FN": 6655,
+    "TP": 20766
+  },
+  "rules": [
+    "Rush hour (7-9 AM, 5-7 PM) \u2192 +25% delay probability",
+    "Long distance trips \u2192 +10-20% delay probability",
+    "Low average speed \u2192 +15-25% delay probability",
+    "High stop ratio (>40%) \u2192 +20% delay probability",
+    "High speed variance \u2192 +15% delay probability",
+    "Business hours \u2192 +5% delay probability",
+    "Late night/early morning \u2192 -15% delay probability",
+    "Weekend mornings \u2192 -10% delay probability",
+    "Complex routes \u2192 +10% delay probability"
+  ],
+  "threshold_analysis": [
+    {
+      "threshold": 0.3,
+      "accuracy": 0.39738515053376516,
+      "precision": 0.2993297297297297,
+      "recall": 0.7573027971262901,
+      "f1": 0.429067316831274,
+      "predicted_delay_rate": 0.7564853282737414
+    },
+    {
+      "threshold": 0.35,
+      "accuracy": 0.44165658019562304,
+      "precision": 0.2985345192714951,
+      "recall": 0.6426096787133948,
+      "f1": 0.4076764685468385,
+      "predicted_delay_rate": 0.6436258955150643
+    },
+    {
+      "threshold": 0.4,
+      "accuracy": 0.5381268605449966,
+      "precision": 0.2987387484503854,
+      "recall": 0.404252215455308,
+      "f1": 0.34357710725742713,
+      "predicted_delay_rate": 0.4046146968061326
+    },
+    {
+      "threshold": 0.45,
+      "accuracy": 0.5470574765285092,
+      "precision": 0.2983573775174975,
+      "recall": 0.3808759709711535,
+      "f1": 0.3346041713388652,
+      "predicted_delay_rate": 0.3817047771707721
+    },
+    {
+      "threshold": 0.5,
+      "accuracy": 0.5470465722354891,
+      "precision": 0.2983373328762427,
+      "recall": 0.3808395025710222,
+      "f1": 0.3345774929915899,
+      "predicted_delay_rate": 0.38169387287775197
+    },
+    {
+      "threshold": 0.55,
+      "accuracy": 0.5472101366307915,
+      "precision": 0.29828074491518153,
+      "recall": 0.38025600816892163,
+      "f1": 0.3343165859758248,
+      "predicted_delay_rate": 0.38118137110580436
+    },
+    {
+      "threshold": 0.6,
+      "accuracy": 0.6282181294775753,
+      "precision": 0.2970935181807126,
+      "recall": 0.17818460304146458,
+      "f1": 0.22276426470923474,
+      "predicted_delay_rate": 0.17933200300958488
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "lstm": {
+    "auc": 0.5075110768912701,
+    "final_train_acc": 0.6993464052287581,
+    "final_val_acc": 0.6994251300301122,
+    "model_path": "lstm_model.pth"
+  },
+  "gru": {
+    "auc": 0.5044002794620356,
+    "final_train_acc": 0.6993464052287581,
+    "final_val_acc": 0.6994251300301122,
+    "model_path": "gru_model.pth"
+  },
+  "best_model": "lstm",
+  "hyperparameters": {
+    "hidden_size": 64,
+    "num_layers": 2,
+    "dropout": 0.3,
+    "learning_rate": 0.001,
+    "batch_size": 128,
+    "epochs": 20
+  }
+}
