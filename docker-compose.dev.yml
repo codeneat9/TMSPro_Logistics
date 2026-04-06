@@ -1,0 +1,81 @@
+name: TMSPro Logistics - Production Ready Application
+
+services:
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tmspro-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+      - DEBUG=False
+      - API_URL=http://backend:8000
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - ./backend:/app/backend
+      - ./logs:/app/logs
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - tmspro-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: tmspro-postgres
+    environment:
+      - POSTGRES_USER=tmspro
+      - POSTGRES_PASSWORD=tmspro_dev_pass
+      - POSTGRES_DB=tmspro
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - tmspro-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: tmspro-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - tmspro-network
+
+  # pgAdmin (Database UI)
+  pgadmin:
+    image: dpage/pgadmin4:7.8
+    container_name: tmspro-pgadmin
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@example.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - tmspro-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  tmspro-network:
+    driver: bridge
+
+# Usage:
+# docker-compose -f docker-compose.dev.yml up
+# Access:
+# - Backend: http://localhost:8000
+# - pgAdmin: http://localhost:5050
+# - Redis: localhost:6379
