@@ -10,6 +10,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from backend.config import settings
 from backend.database import init_db
+from backend.routes import auth, trips, drivers, locations, routes, websocket, notifications
+from backend.websocket.manager import manager
 
 # Configure logging
 logging.basicConfig(
@@ -30,10 +32,20 @@ async def lifespan(app: FastAPI):
         logger.info("Database initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
+
+    try:
+        await manager.startup()
+    except Exception as e:
+        logger.warning(f"WebSocket manager startup warning: {e}")
     
     yield
     
     # Shutdown
+    try:
+        await manager.shutdown()
+    except Exception as e:
+        logger.warning(f"WebSocket manager shutdown warning: {e}")
+
     logger.info(f"Shutting down {settings.APP_NAME}")
 
 
@@ -55,6 +67,16 @@ app.add_middleware(
     allow_methods=settings.CORS_METHODS,
     allow_headers=settings.CORS_HEADERS,
 )
+
+
+# Include routers
+app.include_router(auth.router)
+app.include_router(trips.router)
+app.include_router(drivers.router)
+app.include_router(locations.router)
+app.include_router(routes.router)
+app.include_router(websocket.router)
+app.include_router(notifications.router)
 
 
 # Health check endpoint

@@ -28,18 +28,7 @@
       }
     },
     "plugins": [
-      [
-        "expo-location",
-        {
-          "locationWhenInUsePermission": "TMS uses your location to track active shipment progress in real time."
-        }
-      ],
-      [
-        "expo-notifications",
-        {
-          "color": "#0a1425"
-        }
-      ]
+
     ]
   }
 }

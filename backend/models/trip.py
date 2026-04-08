@@ -1,6 +1,7 @@
 """Trip model."""
 
 from datetime import datetime
+import uuid
 from sqlalchemy import Column, String, Float, DateTime, Boolean, ForeignKey, Enum, JSON, Integer
 from sqlalchemy.orm import relationship
 import enum
@@ -22,7 +23,7 @@ class Trip(Base):
     
     __tablename__ = "trips"
 
-    id = Column(String, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
     driver_id = Column(String, ForeignKey("drivers.id"))
     vehicle_id = Column(String, ForeignKey("vehicles.id"))
@@ -72,6 +73,7 @@ class Trip(Base):
     feedback = relationship("Feedback", back_populates="trip", uselist=False)
     analytics = relationship("Analytics", back_populates="trip", uselist=False)
     compliance_logs = relationship("ComplianceLog", back_populates="trip")
+    trip_logs = relationship("TripLog", back_populates="trip", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<Trip {self.id}>"

@@ -1,6 +1,7 @@
 """User model."""
 
 from datetime import datetime
+import uuid
 from sqlalchemy import Column, String, DateTime, Boolean, Enum
 from sqlalchemy.orm import relationship
 import enum
@@ -21,7 +22,7 @@ class User(Base):
     
     __tablename__ = "users"
 
-    id = Column(String, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
     full_name = Column(String)

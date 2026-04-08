@@ -1,7 +1,9 @@
 """Location model for GPS tracking."""
 
 from datetime import datetime
+import uuid
 from sqlalchemy import Column, String, Float, DateTime, Integer, ForeignKey, Index
+from sqlalchemy.orm import relationship
 
 from backend.database import Base
 
@@ -11,7 +13,7 @@ class Location(Base):
     
     __tablename__ = "locations"
 
-    id = Column(String, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
     trip_id = Column(String, ForeignKey("trips.id"), nullable=False, index=True)
     
     # GPS coordinates

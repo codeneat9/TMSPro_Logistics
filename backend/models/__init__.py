@@ -12,6 +12,7 @@ from backend.models.analytics import Analytics
 from backend.models.geofence import Geofence
 from backend.models.compliance_log import ComplianceLog
 from backend.models.api_key import ApiKey
+from backend.models.trip_log import TripLog
 
 __all__ = [
     "User",
@@ -26,4 +27,5 @@ __all__ = [
     "Geofence",
     "ComplianceLog",
     "ApiKey",
+    "TripLog",
 ]

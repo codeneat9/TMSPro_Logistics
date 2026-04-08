@@ -4,7 +4,8 @@ import os
 from functools import lru_cache
 from typing import Optional
 
-from pydantic import BaseSettings, validator
+from pydantic import validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -27,6 +28,13 @@ class Settings(BaseSettings):
         "REDIS_URL",
         "redis://localhost:6379/0"
     )
+
+    # Routing engine
+    OSRM_BASE_URL: str = os.getenv(
+        "OSRM_BASE_URL",
+        "http://router.project-osrm.org"
+    )
+    OSRM_TIMEOUT_SECONDS: int = int(os.getenv("OSRM_TIMEOUT_SECONDS", "10"))
 
     # Firebase
     FIREBASE_PROJECT_ID: str = os.getenv("FIREBASE_PROJECT_ID", "")
@@ -56,6 +64,7 @@ class Settings(BaseSettings):
         "http://localhost:3001",
         "http://localhost:8000",
     ]
+    WS_IDLE_TIMEOUT_SECONDS: int = int(os.getenv("WS_IDLE_TIMEOUT_SECONDS", "45"))
 
     # API
     API_PREFIX: str = "/api"

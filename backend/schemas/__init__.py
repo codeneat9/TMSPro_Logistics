@@ -120,8 +120,13 @@ class TripBase(BaseModel):
     cargo_weight_kg: Optional[float] = None
 
 
-class TripCreate(TripBase):
-    pass
+class TripCreate(BaseModel):
+    pickup_lat: float
+    pickup_lng: float
+    dropoff_lat: float
+    dropoff_lng: float
+    cargo_description: Optional[str] = None
+    cargo_weight_kg: Optional[float] = None
 
 
 class TripUpdate(BaseModel):
@@ -229,6 +234,55 @@ class ErrorResponse(BaseModel):
     error: str
     detail: Optional[str] = None
     status_code: int
+
+
+# ==================== Agent Decision Schemas ====================
+
+class AgentRouteOption(BaseModel):
+    route_id: Optional[str] = None
+    id: Optional[str] = None
+    route_type: str
+    distance_km: float
+    duration_minutes: int
+    risk_score: Optional[float] = 0.0
+    predicted_cost: Optional[float] = 0.0
+    predicted_delay_minutes: Optional[int] = 0
+
+
+class AgentDelayPrediction(BaseModel):
+    predicted_delay_minutes: int = 0
+    delay_probability: float = 0.0
+    severity: str = "low"
+
+
+class AgentDecisionRequest(BaseModel):
+    route_options: List[AgentRouteOption]
+    delay_prediction: AgentDelayPrediction
+    emergency: bool = False
+
+
+class AgentDecisionResponse(BaseModel):
+    selected_route_id: Optional[str]
+    selected_route_type: str
+    decision_reason: str
+    emergency_mode: bool
+    recommended_actions: List[str]
+    ranked_routes: List[dict]
+
+
+class AgentDecisionApplyRequest(AgentDecisionRequest):
+    trip_id: str
+
+
+class AgentDecisionApplyResponse(BaseModel):
+    trip_id: str
+    applied: bool
+    selected_route_id: Optional[str]
+    selected_route_type: str
+    decision_reason: str
+    emergency_mode: bool
+    recommended_actions: List[str]
+    ranked_routes: List[dict]
 
 
 # Update forward references
