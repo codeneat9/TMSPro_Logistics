@@ -1,6 +1,6 @@
 """Location model for GPS tracking."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from sqlalchemy import Column, String, Float, DateTime, Integer, ForeignKey, Index
 from sqlalchemy.orm import relationship
@@ -29,7 +29,7 @@ class Location(Base):
     accuracy_meters = Column(Float)
     
     # Timestamp
-    recorded_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    recorded_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
     
     # Relationships
     trip = relationship("Trip", back_populates="locations")

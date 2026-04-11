@@ -3,16 +3,40 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+import requests
+from datetime import datetime, timezone
 from typing import Dict, List, Set
 
 from sqlalchemy.orm import Session
 
 from backend.models.notification import Notification, NotificationType
+from backend.config import settings
 
 
 class NotificationsService:
     """Service layer for user notifications and device token registration."""
+
+    @staticmethod
+    def normalize_india_phone(phone: str) -> str:
+        raw = ''.join(ch for ch in str(phone or '').strip() if ch.isdigit() or ch == '+')
+        digits = ''.join(ch for ch in raw if ch.isdigit())
+
+        if len(digits) == 12 and digits.startswith('91'):
+            local = digits[2:]
+        elif len(digits) == 10:
+            local = digits
+        else:
+            raise ValueError('Phone must be a valid India mobile number (10 digits).')
+
+        if local[0] not in {'6', '7', '8', '9'}:
+            raise ValueError('India mobile number must start with 6/7/8/9.')
+
+        return f'+91{local}'
+
+    @staticmethod
+    def normalize_india_phone_digits(phone: str) -> str:
+        normalized = NotificationsService.normalize_india_phone(phone)
+        return ''.join(ch for ch in normalized if ch.isdigit())
 
     # MVP in-memory token store; replace with persistent store in a later migration.
     _device_tokens: Dict[str, Set[str]] = {}
@@ -50,7 +74,7 @@ class NotificationsService:
             message=message,
             is_read=False,
             sent_via_fcm=False,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
         )
 
         db.add(notification)
@@ -85,7 +109,7 @@ class NotificationsService:
             return None
 
         notification.is_read = True
-        notification.read_at = datetime.utcnow()
+        notification.read_at = datetime.now(timezone.utc)
         db.commit()
         db.refresh(notification)
         return notification
@@ -107,4 +131,91 @@ class NotificationsService:
             response = messaging.send(msg)
             return True, response
         except Exception as exc:  # noqa: BLE001 - best-effort push delivery
+            return False, str(exc)
+
+    @staticmethod
+    def send_sms_update(phone: str, title: str, message: str) -> tuple[bool, str]:
+        if not phone:
+            return False, "missing_destination_phone"
+
+        provider = str(settings.PHONE_NOTIFICATION_PROVIDER or "auto").strip().lower()
+
+        if provider in {"callmebot", "whatsapp"}:
+            return NotificationsService.send_callmebot_whatsapp(phone, title, message)
+
+        if provider in {"twilio", "sms"}:
+            return NotificationsService.send_twilio_sms(phone, title, message)
+
+        # auto mode: prefer free WhatsApp route first, then Twilio if configured.
+        ok, result = NotificationsService.send_callmebot_whatsapp(phone, title, message)
+        if ok:
+            return ok, result
+
+        ok_twilio, result_twilio = NotificationsService.send_twilio_sms(phone, title, message)
+        if ok_twilio:
+            return ok_twilio, result_twilio
+
+        return False, f"phone_notification_unavailable: {result}; {result_twilio}"
+
+    @staticmethod
+    def send_callmebot_whatsapp(phone: str, title: str, message: str) -> tuple[bool, str]:
+        api_key = settings.CALLMEBOT_API_KEY
+        if not api_key:
+            return False, "callmebot_not_configured"
+
+        try:
+            phone_digits = NotificationsService.normalize_india_phone_digits(phone)
+        except ValueError as exc:
+            return False, str(exc)
+
+        body = f"{title}\n{message}".strip()
+        url = "https://api.callmebot.com/whatsapp.php"
+        try:
+            response = requests.get(
+                url,
+                params={
+                    "phone": phone_digits,
+                    "text": body,
+                    "apikey": api_key,
+                },
+                timeout=15,
+            )
+            if response.status_code >= 400:
+                return False, response.text
+            return True, "sent_via_callmebot_whatsapp"
+        except Exception as exc:  # noqa: BLE001
+            return False, str(exc)
+
+    @staticmethod
+    def send_twilio_sms(phone: str, title: str, message: str) -> tuple[bool, str]:
+        sid = settings.TWILIO_ACCOUNT_SID
+        auth_token = settings.TWILIO_AUTH_TOKEN
+        from_number = settings.TWILIO_FROM_NUMBER
+
+        if not sid or not auth_token or not from_number:
+            return False, "twilio_not_configured"
+
+        try:
+            normalized_phone = NotificationsService.normalize_india_phone(phone)
+        except ValueError as exc:
+            return False, str(exc)
+
+        sms_body = f"{title}\n{message}".strip()
+        url = f"https://api.twilio.com/2010-04-01/Accounts/{sid}/Messages.json"
+
+        try:
+            response = requests.post(
+                url,
+                data={
+                    "To": normalized_phone,
+                    "From": from_number,
+                    "Body": sms_body,
+                },
+                auth=(sid, auth_token),
+                timeout=15,
+            )
+            if response.status_code >= 400:
+                return False, response.text
+            return True, "sent_via_twilio"
+        except Exception as exc:  # noqa: BLE001
             return False, str(exc)

@@ -34,15 +34,21 @@ async def register(
     
     Returns access token and refresh token on successful registration.
     """
-    # Register user (register_user handles duplicate check)
-    user = AuthService.register_user(
-        db=db,
-        email=request.email,
-        password=request.password,
-        full_name=request.full_name,
-        phone=request.phone,
-        role=request.role or "customer"
-    )
+    try:
+        # Register user (register_user handles duplicate check)
+        user = AuthService.register_user(
+            db=db,
+            email=request.email,
+            password=request.password,
+            full_name=request.full_name,
+            phone=request.phone,
+            role=request.role or "customer"
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc)
+        ) from exc
     
     if not user:
         raise HTTPException(

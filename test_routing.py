@@ -24,10 +24,9 @@ def test_imports():
         logger.info("Testing imports...")
         from routing import RouteOptimizer, RerouteDecisionAgent
         logger.info("✓ Routing modules imported successfully")
-        return True
     except ImportError as e:
         logger.error(f"✗ Import failed: {e}")
-        return False
+        raise
 
 def test_feature_builder():
     """Test feature builder integration"""
@@ -49,10 +48,10 @@ def test_feature_builder():
         
         result = fb.build(sample_input)
         logger.info(f"✓ Feature builder working: {len(result.features)} features built")
-        return True
+        assert len(result.features) > 0
     except Exception as e:
         logger.error(f"✗ Feature builder test failed: {e}")
-        return False
+        raise
 
 def test_predictor():
     """Test delay predictor"""
@@ -79,10 +78,10 @@ def test_predictor():
         prediction = pred.predict(result.features)
         
         logger.info(f"✓ Predictor working: delay_prob={prediction['delay_probability']:.2%}")
-        return True
+        assert "delay_probability" in prediction
     except Exception as e:
         logger.error(f"✗ Predictor test failed: {e}")
-        return False
+        raise
 
 def test_app_routes():
     """Test FastAPI app can load with routing"""
@@ -96,10 +95,10 @@ def test_app_routes():
         found_routes = [r for r in expected_routes if any(r in route for route in routes)]
         logger.info(f"✓ FastAPI app loaded: found {len(found_routes)} routing routes")
         logger.info(f"  Routes: {[r for r in routes if '/routing' in r]}")
-        return True
+        assert len(found_routes) > 0
     except Exception as e:
         logger.error(f"✗ FastAPI app test failed: {e}")
-        return False
+        raise
 
 def run_all_tests():
     """Run all tests"""
@@ -117,8 +116,8 @@ def run_all_tests():
     results = []
     for name, test_func in tests:
         try:
-            result = test_func()
-            results.append((name, result))
+            test_func()
+            results.append((name, True))
         except Exception as e:
             logger.error(f"Test '{name}' crashed: {e}")
             results.append((name, False))

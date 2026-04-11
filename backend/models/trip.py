@@ -1,6 +1,6 @@
 """Trip model."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 from sqlalchemy import Column, String, Float, DateTime, Boolean, ForeignKey, Enum, JSON, Integer
 from sqlalchemy.orm import relationship
@@ -60,8 +60,8 @@ class Trip(Base):
     proof_of_delivery = Column(String)  # URL/path to POD image/signature
     is_urgent = Column(Boolean, default=False)
     requires_signature = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
     user = relationship("User", back_populates="trips", foreign_keys=[user_id])

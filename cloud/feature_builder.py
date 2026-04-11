@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 import math
 from typing import Any
 
@@ -30,7 +30,7 @@ class DelayFeatureBuilder:
         if timestamp_note:
             assumptions.append(timestamp_note)
 
-        dt = datetime.utcfromtimestamp(timestamp)
+        dt = datetime.fromtimestamp(timestamp, timezone.utc)
 
         call_type = self._first_value(raw, ["CALL_TYPE", "call_type"], self.categorical_defaults["CALL_TYPE"])
         day_type = self._first_value(raw, ["DAY_TYPE", "day_type"], self._infer_day_type(dt))

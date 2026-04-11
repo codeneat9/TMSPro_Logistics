@@ -4,7 +4,8 @@ Handles driver profiles, status management, and location tracking
 """
 
 from typing import List, Optional
-from datetime import datetime
+import uuid
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 from backend.models.driver import Driver
@@ -23,6 +24,7 @@ class DriversService:
     ) -> Driver:
         """Create a driver profile"""
         driver = Driver(
+            id=str(uuid.uuid4()),
             user_id=user_id,
             license_number=license_number,
             vehicle_id=vehicle_id,
@@ -75,12 +77,18 @@ class DriversService:
         
         if not driver:
             return None
-        
-        valid_statuses = ["online", "offline", "on_break", "busy"]
-        if status not in valid_statuses:
+
+        normalized_status = {
+            "online": "active",
+            "busy": "active",
+            "break": "on_break",
+        }.get(status, status)
+
+        valid_statuses = ["active", "inactive", "on_break", "offline"]
+        if normalized_status not in valid_statuses:
             return None
-        
-        driver.status = status
+
+        driver.status = normalized_status
         db.commit()
         db.refresh(driver)
         return driver
@@ -103,7 +111,7 @@ class DriversService:
         driver.current_lat = latitude
         driver.current_lng = longitude
         driver.current_heading = heading
-        driver.last_location_update = datetime.utcnow()
+        driver.last_location_update = datetime.now(timezone.utc)
         
         db.commit()
         db.refresh(driver)

@@ -1,8 +1,8 @@
 """Pydantic schemas for request/response validation."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 # ==================== User Schemas ====================
@@ -28,9 +28,7 @@ class UserResponse(UserBase):
     is_active: bool
     is_verified: bool
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ==================== Driver Schemas ====================
@@ -62,9 +60,7 @@ class DriverResponse(DriverBase):
     current_lat: Optional[float]
     current_lng: Optional[float]
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ==================== Vehicle Schemas ====================
@@ -84,9 +80,7 @@ class VehicleResponse(VehicleBase):
     status: str
     rating: float
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ==================== Location Schemas ====================
@@ -103,9 +97,7 @@ class LocationCreate(BaseModel):
 class LocationResponse(LocationCreate):
     id: str
     recorded_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ==================== Trip Schemas ====================
@@ -145,9 +137,7 @@ class TripResponse(TripBase):
     estimated_arrival: Optional[datetime]
     estimated_delay_minutes: Optional[int]
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TripDetailResponse(TripResponse):
@@ -174,9 +164,7 @@ class RouteResponse(RouteBase):
     predicted_delay_minutes: int
     predicted_cost: Optional[float]
     risk_score: Optional[float]
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ==================== Notification Schemas ====================
@@ -193,9 +181,7 @@ class NotificationResponse(NotificationCreate):
     id: str
     is_read: bool
     created_at: datetime
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ==================== Auth Schemas ====================
@@ -223,9 +209,7 @@ class AnalyticsResponse(BaseModel):
     efficiency_score: Optional[float]
     on_time_percentage: Optional[float]
     total_distance_km: float
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ==================== Error Schemas ====================
@@ -286,4 +270,4 @@ class AgentDecisionApplyResponse(BaseModel):
 
 
 # Update forward references
-TripDetailResponse.update_forward_refs()
+TripDetailResponse.model_rebuild()

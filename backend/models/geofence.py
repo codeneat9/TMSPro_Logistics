@@ -1,6 +1,6 @@
 """Geofence model."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, Float, DateTime, Enum
 import enum
 
@@ -49,8 +49,8 @@ class Geofence(Base):
     is_active = Column(String, default=True)
     alerting_enabled = Column(String, default=True)
     
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     def __repr__(self):
         return f"<Geofence {self.name}>"

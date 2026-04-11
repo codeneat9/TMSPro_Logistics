@@ -1,8 +1,21 @@
 import { Alert, PermissionsAndroid, Platform } from 'react-native';
-import messaging from '@react-native-firebase/messaging';
 import { notificationsAPI } from './api';
 
+let messaging = null;
+try {
+  // Keep push features optional during bare-workflow bring-up.
+  // If native Firebase modules are unavailable, app startup still proceeds.
+  // eslint-disable-next-line global-require
+  messaging = require('@react-native-firebase/messaging').default;
+} catch {
+  messaging = null;
+}
+
 export const requestPushPermissions = async () => {
+  if (!messaging) {
+    return false;
+  }
+
   try {
     if (Platform.OS === 'android' && Platform.Version >= 33) {
       const granted = await PermissionsAndroid.request(
@@ -26,6 +39,10 @@ export const requestPushPermissions = async () => {
 };
 
 export const registerDeviceForPush = async () => {
+  if (!messaging) {
+    return null;
+  }
+
   try {
     await messaging().registerDeviceForRemoteMessages();
     const token = await messaging().getToken();
@@ -39,6 +56,10 @@ export const registerDeviceForPush = async () => {
 };
 
 export const initializePushNotifications = async (onForegroundMessage) => {
+  if (!messaging) {
+    return () => {};
+  }
+
   const granted = await requestPushPermissions();
   if (!granted) {
     return () => {};

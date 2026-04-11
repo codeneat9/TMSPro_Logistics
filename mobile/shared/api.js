@@ -9,7 +9,7 @@ import { jwtDecode } from 'jwt-decode';
 import { Platform } from 'react-native';
 
 // Set this to your PC LAN IP when testing on a physical phone, e.g. '192.168.1.8'.
-const MANUAL_LAN_IP = '';
+const MANUAL_LAN_IP = '10.24.72.187';
 
 const RESOLVED_HOST = MANUAL_LAN_IP
   ? `http://${MANUAL_LAN_IP}:8001`

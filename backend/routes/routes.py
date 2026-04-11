@@ -3,6 +3,7 @@ Routes Optimization Endpoints
 Provides route generation, alternatives, and predictions
 """
 
+import requests
 from fastapi import APIRouter, HTTPException, Depends, status, Query
 from sqlalchemy.orm import Session
 from backend.database import get_db
@@ -23,6 +24,72 @@ router = APIRouter(
     prefix="/api/routes",
     tags=["routes"],
 )
+
+
+@router.get('/address-suggestions', response_model=dict)
+async def address_suggestions(
+    q: str = Query(..., min_length=2, description='Partial address text'),
+    country: str = Query('in', description='Country code for filtering (default: in)'),
+):
+    """Fetch OSM address suggestions for typeahead inputs using Photon."""
+    try:
+        response = requests.get(
+            'https://photon.komoot.io/api/',
+            params={
+                'limit': 8,
+                'q': q,
+            },
+            timeout=12,
+        )
+        response.raise_for_status()
+        payload = response.json()
+    except requests.RequestException as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=f'Address provider failed: {exc}')
+
+    items = []
+    features = payload.get('features', []) if isinstance(payload, dict) else []
+    normalized_country = (country or '').lower()
+
+    for feature in features:
+        props = feature.get('properties', {})
+        coords = feature.get('geometry', {}).get('coordinates', [None, None])
+        if not isinstance(coords, list) or len(coords) < 2:
+            continue
+
+        display_parts = [
+            props.get('name'),
+            props.get('city'),
+            props.get('state'),
+            props.get('country'),
+        ]
+        display_name = ', '.join([part for part in display_parts if part])
+        place_id = str(props.get('osm_id', ''))
+
+        try:
+            lon = float(coords[0])
+            lat = float(coords[1])
+        except (TypeError, ValueError):
+            continue
+
+        country_code = str(props.get('countrycode', '')).lower()
+
+        items.append(
+            {
+                'id': f'geo-{place_id}',
+                'name': display_name,
+                'city': props.get('city') or props.get('name') or q,
+                'latitude': lat,
+                'longitude': lon,
+                'country_code': country_code,
+            }
+        )
+
+    if normalized_country:
+        in_country = [item for item in items if item.get('country_code') == normalized_country]
+        if in_country:
+            items = in_country
+
+    return {'items': items, 'total': len(items), 'query': q}
 
 
 def _parse_coordinates(value: str) -> tuple[float, float]:

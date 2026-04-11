@@ -5,7 +5,7 @@ Handles WebSocket connection logic for real-time features
 
 from fastapi import WebSocket, WebSocketDisconnect, status
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 from backend.websocket.manager import manager
 from backend.services.auth import AuthService
@@ -162,7 +162,7 @@ async def handle_driver_tracking(
                 await websocket.send_json({
                     "type": "location_received",
                     "trip_id": trip_id,
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 })
             
             elif data.get("type") == "status_update":
@@ -212,7 +212,7 @@ async def handle_notifications(
                 await websocket.send_json({
                     "type": "subscription_confirmed",
                     "user_id": user_id,
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 })
 
     except WebSocketDisconnect:

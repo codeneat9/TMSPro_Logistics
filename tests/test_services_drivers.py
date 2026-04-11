@@ -1,10 +1,8 @@
+import uuid
 import pytest
-from sqlalchemy.orm import Session
 from backend.services.drivers import DriversService
-from backend.models.driver import Driver
 from backend.models.vehicle import Vehicle
 from backend.models.user import User
-from backend.schemas import DriverCreate
 
 
 @pytest.fixture
@@ -12,9 +10,9 @@ def test_user(db_session):
     """Create a test user."""
     user = User(
         email="driver@example.com",
-        hashed_password="hashed_password",
-        first_name="John",
-        last_name="Driver",
+        password_hash="hashed_password",
+        full_name="John Driver",
+        phone="+1234567890",
         role="driver"
     )
     db_session.add(user)
@@ -27,13 +25,12 @@ def test_user(db_session):
 def test_vehicle(db_session):
     """Create a test vehicle."""
     vehicle = Vehicle(
+        id=str(uuid.uuid4()),
         registration_number="ABC123",
         vehicle_type="truck",
-        model="Volvo FH16",
-        year=2022,
         capacity_kg=20000,
         capacity_cubic_meters=50,
-        color="White"
+        manufacture_year="2022"
     )
     db_session.add(vehicle)
     db_session.commit()
@@ -41,154 +38,143 @@ def test_vehicle(db_session):
     return vehicle
 
 
-@pytest.fixture
-def drivers_service(db_session):
-    """Create DriversService instance with test database."""
-    return DriversService(db_session)
-
-
 class TestDriversService:
     """Unit tests for DriversService."""
     
-    def test_create_driver_profile(self, drivers_service, test_user):
+    def test_create_driver_profile(self, db_session, test_user):
         """Test creating a driver profile."""
-        driver_data = CreateDriverRequest(
+        driver = DriversService.create_driver_profile(
+            db=db_session,
             user_id=test_user.id,
             license_number="DL123456",
-            license_expiry="2025-12-31",
-            phone_number="+1234567890",
-            address="123 Main Street"
         )
-        
-        driver = drivers_service.create_driver_profile(driver_data)
-        
+
         assert driver is not None
         assert driver.user_id == test_user.id
         assert driver.license_number == "DL123456"
         assert driver.status == "offline"
     
-    def test_get_driver(self, drivers_service, test_user):
+    def test_get_driver(self, db_session, test_user):
         """Test retrieving a driver."""
-        driver_data = CreateDriverRequest(
+        created_driver = DriversService.create_driver_profile(
+            db=db_session,
             user_id=test_user.id,
             license_number="DL123456",
-            license_expiry="2025-12-31",
-            phone_number="+1234567890",
-            address="123 Main Street"
         )
-        
-        created_driver = drivers_service.create_driver_profile(driver_data)
-        retrieved_driver = drivers_service.get_driver(created_driver.id)
+        retrieved_driver = DriversService.get_driver(db_session, created_driver.id)
         
         assert retrieved_driver is not None
         assert retrieved_driver.id == created_driver.id
         assert retrieved_driver.license_number == "DL123456"
     
-    def test_update_driver_status(self, drivers_service, test_user):
+    def test_update_driver_status(self, db_session, test_user):
         """Test updating driver status."""
-        driver_data = CreateDriverRequest(
+        driver = DriversService.create_driver_profile(
+            db=db_session,
             user_id=test_user.id,
             license_number="DL123456",
-            license_expiry="2025-12-31",
-            phone_number="+1234567890",
-            address="123 Main Street"
         )
-        
-        driver = drivers_service.create_driver_profile(driver_data)
+
         assert driver.status == "offline"
-        
-        updated_driver = drivers_service.update_driver_status(driver.id, "online")
-        assert updated_driver.status == "online"
-        
-        updated_driver = drivers_service.update_driver_status(driver.id, "break")
-        assert updated_driver.status == "break"
+
+        updated_driver = DriversService.update_driver_status(db_session, driver.id, "online")
+        assert updated_driver.status == "active"
+
+        updated_driver = DriversService.update_driver_status(db_session, driver.id, "break")
+        assert updated_driver.status == "on_break"
     
-    def test_update_driver_location(self, drivers_service, test_user):
+    def test_update_driver_location(self, db_session, test_user):
         """Test updating driver location."""
-        driver_data = CreateDriverRequest(
+        driver = DriversService.create_driver_profile(
+            db=db_session,
             user_id=test_user.id,
             license_number="DL123456",
-            license_expiry="2025-12-31",
-            phone_number="+1234567890",
-            address="123 Main Street"
         )
-        
-        driver = drivers_service.create_driver_profile(driver_data)
-        updated_driver = drivers_service.update_driver_location(
-            driver.id, 
-            lat=40.7128, 
-            lng=-74.0060
+
+        updated_driver = DriversService.update_driver_location(
+            db=db_session,
+            driver_id=driver.id,
+            latitude=40.7128,
+            longitude=-74.0060,
         )
         
         assert updated_driver.current_lat == 40.7128
         assert updated_driver.current_lng == -74.0060
     
-    def test_assign_vehicle(self, drivers_service, test_user, test_vehicle):
+    def test_assign_vehicle(self, db_session, test_user, test_vehicle):
         """Test assigning vehicle to driver."""
-        driver_data = CreateDriverRequest(
+        driver = DriversService.create_driver_profile(
+            db=db_session,
             user_id=test_user.id,
             license_number="DL123456",
-            license_expiry="2025-12-31",
-            phone_number="+1234567890",
-            address="123 Main Street"
         )
-        
-        driver = drivers_service.create_driver_profile(driver_data)
-        updated_driver = drivers_service.assign_vehicle(driver.id, test_vehicle.id)
+
+        updated_driver = DriversService.assign_vehicle(db_session, driver.id, test_vehicle.id)
         
         assert updated_driver.vehicle_id == test_vehicle.id
     
-    def test_update_driver_rating(self, drivers_service, test_user):
+    def test_update_driver_rating(self, db_session, test_user):
         """Test updating driver rating."""
-        driver_data = CreateDriverRequest(
+        driver = DriversService.create_driver_profile(
+            db=db_session,
             user_id=test_user.id,
             license_number="DL123456",
-            license_expiry="2025-12-31",
-            phone_number="+1234567890",
-            address="123 Main Street"
         )
-        
-        driver = drivers_service.create_driver_profile(driver_data)
+
         assert driver.rating == 5.0
-        
-        # Add a 4-star rating
-        updated_driver = drivers_service.update_driver_rating(driver.id, 4)
-        assert updated_driver.rating == 4.5  # (5+4)/2
-        
-        # Add a 5-star rating
-        updated_driver = drivers_service.update_driver_rating(driver.id, 5)
-        assert updated_driver.rating == 4.666666  # (5+4+5)/3 ~= 4.667
+
+        updated_driver = DriversService.update_driver_rating(db_session, driver.id, 4)
+        assert updated_driver.rating == 4.0
+
+        updated_driver = DriversService.update_driver_rating(db_session, driver.id, 5)
+        assert updated_driver.rating == 4.5
     
-    def test_add_earnings(self, drivers_service, test_user):
+    def test_add_earnings(self, db_session, test_user):
         """Test adding earnings to driver."""
-        driver_data = CreateDriverRequest(
+        driver = DriversService.create_driver_profile(
+            db=db_session,
             user_id=test_user.id,
             license_number="DL123456",
-            license_expiry="2025-12-31",
-            phone_number="+1234567890",
-            address="123 Main Street"
         )
-        
-        driver = drivers_service.create_driver_profile(driver_data)
+
         initial_earnings = driver.total_earnings or 0.0
-        
-        updated_driver = drivers_service.add_earnings(driver.id, 100.0)
+
+        updated_driver = DriversService.add_earnings(db_session, driver.id, 100.0)
         
         assert updated_driver.total_earnings == initial_earnings + 100.0
     
-    def test_list_drivers(self, drivers_service, test_user):
+    def test_list_drivers(self, db_session):
         """Test listing all drivers."""
-        driver_data = CreateDriverRequest(
-            user_id=test_user.id,
-            license_number="DL123456",
-            license_expiry="2025-12-31",
-            phone_number="+1234567890",
-            address="123 Main Street"
+        user1 = User(
+            email="driver1@example.com",
+            password_hash="hashed_password",
+            full_name="Driver One",
+            phone="+1234567891",
+            role="driver",
         )
-        
-        drivers_service.create_driver_profile(driver_data)
-        drivers_service.create_driver_profile(driver_data)
-        
-        drivers = drivers_service.list_drivers()
-        
+        user2 = User(
+            email="driver2@example.com",
+            password_hash="hashed_password",
+            full_name="Driver Two",
+            phone="+1234567892",
+            role="driver",
+        )
+        db_session.add(user1)
+        db_session.add(user2)
+        db_session.commit()
+
+        DriversService.create_driver_profile(
+            db=db_session,
+            user_id=user1.id,
+            license_number="DL123456",
+        )
+        DriversService.create_driver_profile(
+            db=db_session,
+            user_id=user2.id,
+            license_number="DL654321",
+        )
+
+        drivers, total = DriversService.list_drivers(db_session)
+
+        assert total >= 2
         assert len(drivers) >= 2

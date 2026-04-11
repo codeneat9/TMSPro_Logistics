@@ -1,15 +1,28 @@
 """
 Extended dashboard test with different trip scenarios
 """
+import os
+import pytest
 import requests
-import json
-from datetime import datetime
 import time
 
 BASE_URL = "http://127.0.0.1:8000"
+LIVE_DASHBOARD_TESTS = os.getenv("ENABLE_LIVE_DASHBOARD_TESTS", "false").lower() == "true"
+
+
+def _require_live_dashboard() -> None:
+    """Skip unless live dashboard tests are explicitly enabled and reachable."""
+    if not LIVE_DASHBOARD_TESTS:
+        pytest.skip("Live dashboard tests are disabled; set ENABLE_LIVE_DASHBOARD_TESTS=true to run")
+
+    try:
+        requests.get(f"{BASE_URL}/dashboard/health", timeout=2)
+    except requests.RequestException as exc:
+        pytest.skip(f"Dashboard backend not reachable at {BASE_URL}: {exc}")
 
 def test_dashboard_health():
     """Test dashboard health endpoint"""
+    _require_live_dashboard()
     print("\n" + "="*70)
     print("Test 1: Dashboard Health Check")
     print("="*70)
@@ -18,14 +31,15 @@ def test_dashboard_health():
         response = requests.get(f"{BASE_URL}/dashboard/health")
         print(f"Status: {response.status_code}")
         print(f"Response: {response.json()}")
-        return response.status_code == 200
+        assert response.status_code == 200
     except Exception as e:
         print(f"✗ Error: {e}")
-        return False
+        raise
 
 
 def test_dashboard_short_trip():
     """Test with short trip in Lisbon (2.5 km)"""
+    _require_live_dashboard()
     print("\n" + "="*70)
     print("Test 2: Short Trip (2.5 km) - Lisbon City Center")
     print("="*70)
@@ -65,17 +79,18 @@ def test_dashboard_short_trip():
             print(f"\nAgent Decision:")
             print(f"  Should Reroute: {data.get('should_reroute', False)}")
             print(f"  Urgency: {data.get('urgency_level', 'unknown')}")
-            return True
+            assert "delay_probability" in data
         else:
             print(f"Error: {response.text}")
-            return False
+            assert response.status_code == 200
     except Exception as e:
         print(f"✗ Error: {e}")
-        return False
+        raise
 
 
 def test_dashboard_medium_trip():
     """Test with medium trip in Lisbon (8 km)"""
+    _require_live_dashboard()
     print("\n" + "="*70)
     print("Test 3: Medium Trip (8 km) - Lisbon")
     print("="*70)
@@ -118,17 +133,18 @@ def test_dashboard_medium_trip():
             print(f"\nAgent Decision:")
             print(f"  Should Reroute: {data.get('should_reroute', False)}")
             print(f"  Urgency: {data.get('urgency_level', 'unknown')}")
-            return True
+            assert "delay_probability" in data
         else:
             print(f"Error: {response.text}")
-            return False
+            assert response.status_code == 200
     except Exception as e:
         print(f"✗ Error: {e}")
-        return False
+        raise
 
 
 def test_dashboard_high_delay():
     """Test with high delay prediction scenario"""
+    _require_live_dashboard()
     print("\n" + "="*70)
     print("Test 4: High Delay Scenario (Rush Hour Route)")
     print("="*70)
@@ -164,13 +180,13 @@ def test_dashboard_high_delay():
             print(f"  Should Reroute: {data.get('should_reroute', False)}")
             print(f"  Urgency: {data.get('urgency_level', 'unknown')}")
             print(f"  Recommendation: {data.get('driver_notification', '')}")
-            return True
+            assert "delay_probability" in data
         else:
             print(f"Error: {response.text}")
-            return False
+            assert response.status_code == 200
     except Exception as e:
         print(f"✗ Error: {e}")
-        return False
+        raise
 
 
 if __name__ == "__main__":
@@ -179,10 +195,19 @@ if __name__ == "__main__":
     print("="*70)
     
     results = []
-    results.append(("Health Check", test_dashboard_health()))
-    results.append(("Short Trip", test_dashboard_short_trip()))
-    results.append(("Medium Trip", test_dashboard_medium_trip()))
-    results.append(("High Delay", test_dashboard_high_delay()))
+    test_functions = [
+        ("Health Check", test_dashboard_health),
+        ("Short Trip", test_dashboard_short_trip),
+        ("Medium Trip", test_dashboard_medium_trip),
+        ("High Delay", test_dashboard_high_delay),
+    ]
+
+    for test_name, test_func in test_functions:
+        try:
+            test_func()
+            results.append((test_name, True))
+        except Exception:
+            results.append((test_name, False))
     
     print("\n" + "="*70)
     print("TEST SUMMARY")

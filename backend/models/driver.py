@@ -1,6 +1,6 @@
 """Driver model."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, Integer, Float, DateTime, Boolean, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 import enum
@@ -34,8 +34,8 @@ class Driver(Base):
     current_lng = Column(Float)
     current_heading = Column(Float)  # 0-360 degrees
     is_verified = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
     user = relationship("User", back_populates="driver")

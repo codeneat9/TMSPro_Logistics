@@ -4,7 +4,7 @@ Handles trip creation, updates, tracking, and delay predictions
 """
 
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from backend.models.trip import Trip
@@ -85,7 +85,8 @@ class TripsService:
         
         allowed_fields = {
             "driver_id", "vehicle_id", "status", "estimated_arrival",
-            "notes", "estimated_delay_minutes"
+            "notes", "estimated_delay_minutes", "cargo_description",
+            "cargo_weight_kg", "cargo_volume", "special_handling"
         }
         
         for key, value in kwargs.items():

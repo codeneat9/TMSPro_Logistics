@@ -6,7 +6,7 @@ Handles WebSocket connections and broadcasting of real-time updates
 import json
 from typing import Dict, Set, List
 from fastapi import WebSocket
-from datetime import datetime
+from datetime import datetime, timezone
 from backend.websocket.redis_bridge import RedisBridge
 
 
@@ -137,7 +137,7 @@ class ConnectionManager:
     ):
         """Broadcast driver location update to all interested parties"""
         if not timestamp:
-            timestamp = datetime.utcnow().isoformat()
+            timestamp = datetime.now(timezone.utc).isoformat()
         
         message = {
             "type": "location_update",
@@ -180,7 +180,7 @@ class ConnectionManager:
             "status": status,
             "estimated_arrival": estimated_arrival,
             "estimated_delay_minutes": estimated_delay_minutes,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
         await self.broadcast_to_room(f"trip_{trip_id}", message)
@@ -195,7 +195,7 @@ class ConnectionManager:
             "type": "driver_status_update",
             "driver_id": driver_id,
             "status": status,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
         # Broadcast to driver room
@@ -218,7 +218,7 @@ class ConnectionManager:
             "message": message,
             "trip_id": trip_id,
             "data": data or {},
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
         
         await self.send_to_user(user_id, notification)

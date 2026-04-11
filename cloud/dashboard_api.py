@@ -7,7 +7,7 @@ import logging
 from typing import Optional, List
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, HTTPException
-from datetime import datetime
+from datetime import datetime, timezone
 
 from routing.rerouting_agent import ReroutingAgent, RerouteStrategy
 from routing.route_optimizer import RouteOptimizer

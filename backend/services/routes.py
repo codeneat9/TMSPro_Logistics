@@ -7,7 +7,7 @@ import math
 import uuid
 import time
 from typing import List, Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import requests
 from sqlalchemy.orm import Session
 from backend.models.route import Route

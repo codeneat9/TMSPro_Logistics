@@ -1,6 +1,6 @@
 """Notification model."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Enum
 from sqlalchemy.orm import relationship
 import enum
@@ -42,7 +42,7 @@ class Notification(Base):
     sent_via_fcm = Column(Boolean, default=False)
     fcm_response = Column(String)  # Success/failure response from FCM
     
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
 
     # Relationships
     user = relationship("User", back_populates="notifications")

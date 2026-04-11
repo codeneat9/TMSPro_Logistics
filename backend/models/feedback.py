@@ -1,6 +1,6 @@
 """Feedback model."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, Float, DateTime, Integer, ForeignKey
 from sqlalchemy.orm import relationship
 
@@ -31,7 +31,7 @@ class Feedback(Base):
     # Issues reported
     issues = Column(String)  # Comma-separated: "late", "rude", "damaged", etc.
     
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Relationships
     trip = relationship("Trip", back_populates="feedback")

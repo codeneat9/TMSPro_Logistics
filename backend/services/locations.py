@@ -4,7 +4,7 @@ Handles GPS tracking and real-time location updates
 """
 
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from backend.models.location import Location
@@ -33,7 +33,7 @@ class LocationsService:
             heading=heading,
             accuracy_meters=accuracy_meters,
             altitude=altitude_meters,
-            recorded_at=datetime.utcnow()
+            recorded_at=datetime.now(timezone.utc)
         )
         db.add(location)
         db.commit()
@@ -61,7 +61,7 @@ class LocationsService:
         minutes: int = 5
     ) -> List[Location]:
         """Get location points from the last N minutes"""
-        since = datetime.utcnow() - timedelta(minutes=minutes)
+        since = datetime.now(timezone.utc) - timedelta(minutes=minutes)
         
         return db.query(Location).filter(
             Location.trip_id == trip_id,
@@ -132,7 +132,7 @@ class LocationsService:
         days: int = 30
     ) -> int:
         """Delete location records older than N days"""
-        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
         
         deleted = db.query(Location).filter(
             Location.recorded_at < cutoff_date

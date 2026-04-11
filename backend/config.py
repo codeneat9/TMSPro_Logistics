@@ -4,12 +4,13 @@ import os
 from functools import lru_cache
 from typing import Optional
 
-from pydantic import validator
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
+
+    model_config = SettingsConfigDict(env_file=".env.backend", case_sensitive=True)
 
     # Application
     APP_NAME: str = "TMSPro Backend"
@@ -42,7 +43,7 @@ class Settings(BaseSettings):
     FIREBASE_CLIENT_EMAIL: str = os.getenv("FIREBASE_CLIENT_EMAIL", "")
 
     # JWT
-    JWT_SECRET: str = os.getenv("JWT_SECRET", "super-secret-key-change-in-production")
+    JWT_SECRET: str = os.getenv("JWT_SECRET", "change-this-to-a-32-plus-char-secret-key")
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRATION_HOURS: int = 24
     JWT_REFRESH_EXPIRATION_DAYS: int = 30
@@ -81,16 +82,22 @@ class Settings(BaseSettings):
     SMTP_USER: Optional[str] = os.getenv("SMTP_USER", None)
     SMTP_PASSWORD: Optional[str] = os.getenv("SMTP_PASSWORD", None)
 
+    # SMS (Twilio)
+    TWILIO_ACCOUNT_SID: Optional[str] = os.getenv("TWILIO_ACCOUNT_SID", None)
+    TWILIO_AUTH_TOKEN: Optional[str] = os.getenv("TWILIO_AUTH_TOKEN", None)
+    TWILIO_FROM_NUMBER: Optional[str] = os.getenv("TWILIO_FROM_NUMBER", None)
+
+    # Phone notifications provider
+    PHONE_NOTIFICATION_PROVIDER: str = os.getenv("PHONE_NOTIFICATION_PROVIDER", "callmebot")
+
+    # Free WhatsApp fallback via CallMeBot
+    CALLMEBOT_API_KEY: Optional[str] = os.getenv("CALLMEBOT_API_KEY", None)
+
     # Feature flags
     ENABLE_LOCATION_STREAMING: bool = True
     ENABLE_REROUTE_RECOMMENDATIONS: bool = True
     ENABLE_DELAY_PREDICTIONS: bool = True
     ENABLE_GEOFENCING: bool = True
-
-    class Config:
-        env_file = ".env.backend"
-        case_sensitive = True
-
 
 @lru_cache()
 def get_settings() -> Settings:

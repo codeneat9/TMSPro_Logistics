@@ -1,6 +1,6 @@
 """API key model for third-party integrations."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 
@@ -32,8 +32,8 @@ class ApiKey(Base):
     last_used_at = Column(DateTime)
     call_count = Column(String, default=0)
     
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
     user = relationship("User", back_populates="api_keys")
@@ -42,7 +42,7 @@ class ApiKey(Base):
         """Check if API key is valid."""
         if not self.is_active:
             return False
-        if self.expires_at and self.expires_at < datetime.utcnow():
+        if self.expires_at and self.expires_at < datetime.now(timezone.utc):
             return False
         return True
 

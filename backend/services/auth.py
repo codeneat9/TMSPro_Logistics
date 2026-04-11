@@ -4,7 +4,7 @@ Handles user registration, login, password hashing, and JWT token management
 """
 
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
@@ -18,8 +18,32 @@ pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 settings = get_settings()
 
 
+def _jwt_secret() -> str:
+    """Return a JWT signing secret that meets HS256 minimum length guidance."""
+    raw = settings.JWT_SECRET or ""
+    return raw if len(raw) >= 32 else raw.ljust(32, "_")
+
+
 class AuthService:
     """Service for authentication operations"""
+
+    @staticmethod
+    def normalize_india_phone(phone: str) -> str:
+        """Normalize user phone to India E.164 format: +91XXXXXXXXXX."""
+        raw = ''.join(ch for ch in str(phone or '').strip() if ch.isdigit() or ch == '+')
+        digits = ''.join(ch for ch in raw if ch.isdigit())
+
+        if len(digits) == 12 and digits.startswith('91'):
+            local = digits[2:]
+        elif len(digits) == 10:
+            local = digits
+        else:
+            raise ValueError('Phone must be a valid India mobile number (10 digits).')
+
+        if not local[0] in {'6', '7', '8', '9'}:
+            raise ValueError('India mobile number must start with 6/7/8/9.')
+
+        return f'+91{local}'
     
     @staticmethod
     def hash_password(password: str) -> str:
@@ -46,15 +70,15 @@ class AuthService:
         to_encode = data.copy()
         
         if expires_delta:
-            expire = datetime.utcnow() + expires_delta
+            expire = datetime.now(timezone.utc) + expires_delta
         else:
-            expire = datetime.utcnow() + timedelta(hours=settings.JWT_EXPIRATION_HOURS)
+            expire = datetime.now(timezone.utc) + timedelta(hours=settings.JWT_EXPIRATION_HOURS)
         
         to_encode.update({"exp": expire})
         
         encoded_jwt = jwt.encode(
             to_encode,
-            settings.JWT_SECRET,
+            _jwt_secret(),
             algorithm="HS256"
         )
         return encoded_jwt
@@ -71,12 +95,12 @@ class AuthService:
             JWT refresh token string
         """
         to_encode = data.copy()
-        expire = datetime.utcnow() + timedelta(days=settings.JWT_REFRESH_EXPIRATION_DAYS)
+        expire = datetime.now(timezone.utc) + timedelta(days=settings.JWT_REFRESH_EXPIRATION_DAYS)
         to_encode.update({"exp": expire, "type": "refresh"})
         
         encoded_jwt = jwt.encode(
             to_encode,
-            settings.JWT_SECRET,
+            _jwt_secret(),
             algorithm="HS256"
         )
         return encoded_jwt
@@ -95,7 +119,7 @@ class AuthService:
         try:
             payload = jwt.decode(
                 token,
-                settings.JWT_SECRET,
+                _jwt_secret(),
                 algorithms=["HS256"]
             )
             return payload
@@ -132,13 +156,15 @@ class AuthService:
         if existing_user:
             return None
         
+        normalized_phone = AuthService.normalize_india_phone(phone)
+
         # Hash password and create user
         hashed_password = AuthService.hash_password(password)
         new_user = User(
             email=email,
             password_hash=hashed_password,
             full_name=full_name,
-            phone=phone,
+            phone=normalized_phone,
             role=role,
             is_active=True,
             is_verified=False  # Email verification required

@@ -1,6 +1,6 @@
 """Vehicle model."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, Float, DateTime, Boolean, Enum
 from sqlalchemy.orm import relationship
 import enum
@@ -32,8 +32,8 @@ class Vehicle(Base):
     last_maintenance = Column(DateTime)
     rating = Column(Float, default=5.0)
     is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     # Relationships
     drivers = relationship("Driver", back_populates="vehicle")

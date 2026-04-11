@@ -1,6 +1,6 @@
 """Compliance log model."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Column, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
@@ -31,7 +31,7 @@ class ComplianceLog(Base):
     # Action taken
     action_taken = Column(String)  # "warning_issued", "incident_logged", "escalated", etc.
     
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
 
     # Relationships
     trip = relationship("Trip", back_populates="compliance_logs")

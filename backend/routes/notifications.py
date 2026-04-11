@@ -7,13 +7,29 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from backend.database import get_db
-from backend.middleware.auth import get_current_user
+from backend.middleware.auth import get_current_user, get_current_user_optional
 from backend.models.user import User
 from backend.services.notifications import NotificationsService
 from backend.websocket.manager import manager
 
 
 router = APIRouter(prefix="/api/notifications", tags=["notifications"])
+
+
+def _serialize_notification(item):
+    notif_type = item.type.value if hasattr(item.type, "value") else str(item.type)
+    return {
+        "id": item.id,
+        "user_id": item.user_id,
+        "trip_id": item.trip_id,
+        "type": notif_type,
+        "title": item.title,
+        "message": item.message,
+        "is_read": item.is_read,
+        "read_at": item.read_at.isoformat() if item.read_at else None,
+        "sent_via_fcm": item.sent_via_fcm,
+        "created_at": item.created_at.isoformat() if item.created_at else None,
+    }
 
 
 class DeviceTokenRequest(BaseModel):
@@ -28,6 +44,14 @@ class SendNotificationRequest(BaseModel):
     message: str
     trip_id: Optional[str] = None
     send_push: bool = True
+
+
+class SmsUpdateRequest(BaseModel):
+    phone: Optional[str] = Field(default=None, min_length=7)
+    trip_id: Optional[str] = None
+    status: str = "update"
+    title: str
+    message: str
 
 
 @router.post("/device-token", response_model=dict)
@@ -52,7 +76,8 @@ async def my_notifications(
         limit=limit,
         offset=offset,
     )
-    return {"items": items, "total": len(items), "limit": limit, "offset": offset}
+    serialized = [_serialize_notification(item) for item in items]
+    return {"items": serialized, "total": len(serialized), "limit": limit, "offset": offset}
 
 
 @router.patch("/{notification_id}/read", response_model=dict)
@@ -114,4 +139,34 @@ async def send_notification(
         "notification_id": notification.id,
         "ws_sent": True,
         "push_results": push_results,
+    }
+
+
+@router.post('/sms-update', response_model=dict)
+async def send_sms_update(
+    request: SmsUpdateRequest,
+    current_user: Optional[User] = Depends(get_current_user_optional),
+):
+    if current_user:
+        role_value = current_user.role.value if hasattr(current_user.role, "value") else str(current_user.role)
+        if role_value not in ["admin", "company", "customer", "driver"]:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+
+    destination_phone = request.phone or getattr(current_user, "phone", None)
+    if not destination_phone:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Phone number is required for SMS delivery")
+
+    ok, result = NotificationsService.send_sms_update(
+        phone=destination_phone,
+        title=request.title,
+        message=f"Trip {request.trip_id or '-'} status {request.status}: {request.message}",
+    )
+
+    return {
+        "sent": ok,
+        "phone": destination_phone,
+        "auth_used": bool(current_user),
+        "trip_id": request.trip_id,
+        "status": request.status,
+        "result": result,
     }
